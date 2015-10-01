@@ -29,7 +29,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ViewAnimator;
 
-
 import com.runtime.permissions.R;
 import com.runtime.permissions.logger.Log;
 import com.runtime.permissions.logger.LogFragment;
@@ -99,23 +98,21 @@ public class MainActivity extends SampleActivityBase
      * Id to identify a contacts permission request.
      */
     private static final int REQUEST_CONTACTS = 1;
-
-
-    private boolean mLogShown;
-
-    /**
-     * Root of the layout of this Activity.
-     */
-    private View mLayout;
-
     /**
      * Called when the 'show camera' button is clicked.
      * Callback is defined in resource layout definition.
      */
     private final IPermissionsPresenter presenter;
+    private boolean mLogShown;
+    /**
+     * Root of the layout of this Activity.
+     */
+    private View mLayout;
+
     public MainActivity() {
         presenter = new PermissionsPresenter(this);
     }
+
     public void showCamera(View view) {
         Log.i(TAG, "Show camera button pressed. Checking permission.");
         presenter.runActionUnderPermissionsNotForced(REQUEST_CAMERA, Manifest.permission.CAMERA);
@@ -127,7 +124,7 @@ public class MainActivity extends SampleActivityBase
      */
     public void showContacts(View v) {
         Log.i(TAG, "Show contacts button pressed. Checking permissions.");
-        presenter.runActionUnderPermissionsNotForced(REQUEST_CONTACTS,
+        presenter.runActionUnderPermissions(REQUEST_CONTACTS, false,
                 Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS);
     }
 
@@ -163,47 +160,7 @@ public class MainActivity extends SampleActivityBase
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (presenter.onRequestPermissionsResult(requestCode, permissions, grantResults))
             return;
-
-        /*
-        if (requestCode == REQUEST_CAMERA) {
-            // BEGIN_INCLUDE(permission_result)
-            // Received permission result for camera permission.
-            Log.i(TAG, "Received response for Camera permission request.");
-
-            // Check if the only required permission has been granted
-            if (presenter.verifyPermissions(grantResults)) {
-                // Camera permission has been granted, preview can be displayed
-                Log.i(TAG, "CAMERA permission has now been granted. Showing preview.");
-                Snackbar.make(mLayout, R.string.permision_available_camera,
-                        Snackbar.LENGTH_SHORT).show();
-            } else {
-                Log.i(TAG, "CAMERA permission was NOT granted.");
-                Snackbar.make(mLayout, R.string.permissions_not_granted,
-                        Snackbar.LENGTH_SHORT).show();
-
-            }
-            // END_INCLUDE(permission_result)
-
-        } else if (requestCode == REQUEST_CONTACTS) {
-            Log.i(TAG, "Received response for contact permissions request.");
-
-            // We have requested multiple permissions for contacts, so all of them need to be
-            // checked.
-            if (presenter.verifyPermissions(grantResults)) {
-                // All required permissions have been granted, display contacts fragment.
-                Snackbar.make(mLayout, R.string.permision_available_contacts,
-                        Snackbar.LENGTH_SHORT)
-                        .show();
-            } else {
-                Log.i(TAG, "Contacts permissions were NOT granted.");
-                Snackbar.make(mLayout, R.string.permissions_not_granted,
-                        Snackbar.LENGTH_SHORT)
-                        .show();
-            }
-
-        } else {*/
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        /*}*/
     }
 
     /* Note: Methods and definitions below are only used to provide the UI for this sample and are
@@ -242,7 +199,9 @@ public class MainActivity extends SampleActivityBase
         return super.onOptionsItemSelected(item);
     }
 
-    /** Create a chain of targets that will receive log data */
+    /**
+     * Create a chain of targets that will receive log data
+     */
     @Override
     public void initializeLogging() {
         // Wraps Android's native log framework.
@@ -285,19 +244,16 @@ public class MainActivity extends SampleActivityBase
     @Override
     public void permissionsGrantResult(int requestCode, int permissionsGrantResult, List<String> requestedPermissions, List<String> grantedPermissions) {
         switch (permissionsGrantResult) {
-            case IPermissionsView.PERMISSIONS_GRANT_RESULT_ALLOW_PARTIALLY:
-
+            case IPermissionsView.PERMISSIONS_ARE_ALREADY_GRANTED:
+                onPermissionsAlreadyGranted(requestCode);
                 break;
-            case IPermissionsView.PERMISSIONS_GRANT_RESULT_ALLOW_ALL:
-
-                break;
-            case IPermissionsView.PERMISSIONS_GRANT_RESULT_DENY_ALL:
-                break;
+            default:
+                showMessageAboutGrantedPermissions(requestCode, permissionsGrantResult, requestedPermissions, grantedPermissions);
         }
     }
 
     @Override
-    public void decideShouldRequestPermissions(final int requestCode,final String[] permissions,final IPermissionRequestDecision decision) {
+    public void decideShouldRequestPermissions(final int requestCode, final String[] permissions, final IPermissionRequestDecision decision) {
         int messageId;
         switch (requestCode) {
             case REQUEST_CAMERA:
@@ -326,7 +282,7 @@ public class MainActivity extends SampleActivityBase
 
     /* private methods */
 
-    public void onPermissionsForAction(int requestCode) {
+    public void onPermissionsAlreadyGranted(int requestCode) {
         switch (requestCode) {
             case REQUEST_CAMERA:
                 showCameraPreview();
@@ -335,5 +291,47 @@ public class MainActivity extends SampleActivityBase
                 showContactDetails();
                 break;
         }
+    }
+
+    public void showMessageAboutGrantedPermissions(int requestCode, int permissionsGrantResult, List<String> requestedPermissions, List<String> grantedPermissions) {
+        int resId;
+        switch (requestCode) {
+
+            case REQUEST_CAMERA:
+                Log.i(TAG, "Received response for Camera permission request.");
+                // Check if the only required permission has been granted
+                switch (permissionsGrantResult) {
+                    case IPermissionsView.PERMISSIONS_GRANT_RESULT_ALLOW_ALL:
+                        Log.i(TAG, "CAMERA permission has now been granted. Showing preview.");
+                        resId = R.string.permision_available_camera;
+                        break;
+                    default:
+                        Log.i(TAG, "CAMERA permission was NOT granted.");
+                        resId = R.string.permissions_not_granted;
+                }
+                showMessage(resId, Snackbar.LENGTH_LONG);
+                break;
+            case REQUEST_CONTACTS:
+                Log.i(TAG, "Received response for contact permissions request.");
+                // We have requested multiple permissions for contacts, so all of them need to be
+                // checked.
+                Log.i(TAG, "Received response for Camera permission request.");
+                // Check if the only required permission has been granted
+                switch (permissionsGrantResult) {
+                    case IPermissionsView.PERMISSIONS_GRANT_RESULT_ALLOW_ALL:
+                        Log.i(TAG, "Contacts permissions has now been granted. Showing preview.");
+                        resId = R.string.permision_available_contacts;
+                        break;
+                    default:
+                        Log.i(TAG, "Contacts permissions were NOT granted.");
+                        resId = R.string.permissions_not_granted;
+                }
+                showMessage(resId, Snackbar.LENGTH_LONG);
+        }
+    }
+
+    private void showMessage(int messageResId, int length) {
+        Snackbar.make(mLayout, messageResId, length)
+                .show();
     }
 }

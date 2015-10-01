@@ -36,7 +36,7 @@ public class PermissionsPresenter implements IPermissionsPresenter {
         Activity activity = getActivity();
 
         if (!isAppropriateVersionCode() || isPermissionsAlreadyAvailable(activity, permissions)) {
-            view.permissionsGrantResult(requestCode, IPermissionsView.PERMISSIONS_GRANT_RESULT_ALLOW_ALL, Arrays.asList(permissions), Arrays.asList(permissions));
+            view.permissionsGrantResult(requestCode, IPermissionsView.PERMISSIONS_ARE_ALREADY_GRANTED, Arrays.asList(permissions), Arrays.asList(permissions));
             return;
         }
 
