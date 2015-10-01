@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'android-apt'
 
 
 // The sample build uses multiple directories to
@@ -41,7 +42,12 @@ android {
 
     }
 }
-
+apt {
+    arguments {
+        androidManifestFile variant.outputs[0].processResources.manifestFile
+        resourcePackageName android.defaultConfig.applicationId
+    }
+}
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile "com.android.support:support-v4:23.0.1"
@@ -50,6 +56,11 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.0.1'
     compile 'com.android.support:support-v4:23.0.1'
     compile 'com.android.support:design:23.0.1'
+    //stor io
+    compile 'com.pushtorefresh.storio:sqlite:1.4.0'
+    compile 'com.pushtorefresh.storio:content-resolver:1.4.0'
+    compile 'com.pushtorefresh.storio:sqlite-annotations:1.4.0'
+    apt 'com.pushtorefresh.storio:sqlite-annotations-processor:1.4.0'
 }
 repositories {
     jcenter()

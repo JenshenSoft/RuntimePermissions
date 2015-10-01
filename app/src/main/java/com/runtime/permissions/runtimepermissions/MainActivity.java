@@ -19,6 +19,7 @@ package com.runtime.permissions.runtimepermissions;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -40,6 +41,7 @@ import com.runtime.permissions.runtimepermissions.presenters.IPermissionRequestD
 import com.runtime.permissions.runtimepermissions.presenters.IPermissionsPresenter;
 import com.runtime.permissions.runtimepermissions.presenters.IPermissionsView;
 import com.runtime.permissions.runtimepermissions.presenters.PermissionsPresenter;
+import com.runtime.permissions.runtimepermissions.presenters.utils.PackageUtil;
 
 import java.util.List;
 
@@ -236,6 +238,7 @@ public class MainActivity extends SampleActivityBase
             transaction.commit();
         }
 
+        PackageUtil.getAllPermissions(this);
         // This method sets up our custom logger, which will print all log messages to the device
         // screen, as well as to adb logcat.
         initializeLogging();
