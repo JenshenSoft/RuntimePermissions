@@ -284,7 +284,16 @@ public class MainActivity extends SampleActivityBase
 
     @Override
     public void permissionsGrantResult(int requestCode, int permissionsGrantResult, List<String> requestedPermissions, List<String> grantedPermissions) {
+        switch (permissionsGrantResult) {
+            case IPermissionsView.PERMISSIONS_GRANT_RESULT_ALLOW_PARTIALLY:
 
+                break;
+            case IPermissionsView.PERMISSIONS_GRANT_RESULT_ALLOW_ALL:
+
+                break;
+            case IPermissionsView.PERMISSIONS_GRANT_RESULT_DENY_ALL:
+                break;
+        }
     }
 
     @Override
@@ -314,9 +323,10 @@ public class MainActivity extends SampleActivityBase
         return this;
     }
 
-    /*
-    @Override
-    public void onPermissionsForAction(int requestCode, List<String> permissions) {
+
+    /* private methods */
+
+    public void onPermissionsForAction(int requestCode) {
         switch (requestCode) {
             case REQUEST_CAMERA:
                 showCameraPreview();
@@ -326,5 +336,4 @@ public class MainActivity extends SampleActivityBase
                 break;
         }
     }
-    */
 }
