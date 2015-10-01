@@ -92,12 +92,12 @@ public class MainActivity extends SampleActivityBase
     /**
      * Id to identify a camera permission request.
      */
-    private static final int REQUEST_CAMERA = 0;
+    public static final int REQUEST_CAMERA = 0;
 
     /**
      * Id to identify a contacts permission request.
      */
-    private static final int REQUEST_CONTACTS = 1;
+    public static final int REQUEST_CONTACTS = 1;
     /**
      * Called when the 'show camera' button is clicked.
      * Callback is defined in resource layout definition.
@@ -248,7 +248,7 @@ public class MainActivity extends SampleActivityBase
                 onPermissionsAlreadyGranted(requestCode);
                 break;
             default:
-                showMessageAboutGrantedPermissions(requestCode, permissionsGrantResult, requestedPermissions, grantedPermissions);
+                showMessageAboutGrantedPermissions(requestCode, permissionsGrantResult);
         }
     }
 
@@ -293,7 +293,7 @@ public class MainActivity extends SampleActivityBase
         }
     }
 
-    public void showMessageAboutGrantedPermissions(int requestCode, int permissionsGrantResult, List<String> requestedPermissions, List<String> grantedPermissions) {
+    public void showMessageAboutGrantedPermissions(int requestCode, int permissionsGrantResult) {
         int resId;
         switch (requestCode) {
 

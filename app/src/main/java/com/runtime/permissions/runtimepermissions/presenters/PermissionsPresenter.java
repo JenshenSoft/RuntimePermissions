@@ -18,6 +18,12 @@ public class PermissionsPresenter implements IPermissionsPresenter {
     private final IPermissionsView view;
 
     private final int[] supportedRequestCodes;
+    private final IPermissionRequestDecision permissionRequestDecision = new IPermissionRequestDecision() {
+        @Override
+        public void forcePermissionsRequest(int requestCode, Activity activity, String[] permissions) {
+            runActionUnderPermissions(requestCode, true, permissions);
+        }
+    };
 
     public PermissionsPresenter(IPermissionsView view) {
         this(view, null);
@@ -30,7 +36,7 @@ public class PermissionsPresenter implements IPermissionsPresenter {
 
     @Override
     public void runActionUnderPermissions(int requestCode, boolean forced, @NonNull String... permissions) {
-        if(!isRequestCodeSupported(requestCode))
+        if (!isRequestCodeSupported(requestCode))
             throw new RuntimeException("Request code does not supported");
 
         Activity activity = getActivity();
@@ -47,17 +53,17 @@ public class PermissionsPresenter implements IPermissionsPresenter {
         }
     }
 
+    
+    /* private methods */
+
     @Override
     public void runActionUnderPermissionsNotForced(int requestCode, @NonNull String... permissions) {
         runActionUnderPermissions(requestCode, false, permissions);
     }
 
-    
-    /* private methods */
-
     @Override
     public boolean onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if(!isRequestCodeSupported(requestCode))
+        if (!isRequestCodeSupported(requestCode))
             return false;
 
         List<String> requestedPermissions = new ArrayList<>(Arrays.asList(permissions));
@@ -67,22 +73,20 @@ public class PermissionsPresenter implements IPermissionsPresenter {
             String permission = permissions[i];
             int grantResult = grantResults[i];
 
-            if(grantResult == PackageManager.PERMISSION_GRANTED) {
+            if (grantResult == PackageManager.PERMISSION_GRANTED) {
                 grantedPermissions.add(permission);
             }
         }
 
         int permissionsGrantResult;
 
-        if(!grantedPermissions.isEmpty()) {
-            if(grantedPermissions.size() < requestedPermissions.size()) {
+        if (!grantedPermissions.isEmpty()) {
+            if (grantedPermissions.size() < requestedPermissions.size()) {
                 permissionsGrantResult = IPermissionsView.PERMISSIONS_GRANT_RESULT_ALLOW_PARTIALLY;
-            }
-            else {
+            } else {
                 permissionsGrantResult = IPermissionsView.PERMISSIONS_GRANT_RESULT_ALLOW_ALL;
             }
-        }
-        else {
+        } else {
             permissionsGrantResult = IPermissionsView.PERMISSIONS_GRANT_RESULT_DENY_ALL;
         }
 
@@ -111,11 +115,11 @@ public class PermissionsPresenter implements IPermissionsPresenter {
     }
 
     private boolean isRequestCodeSupported(int requestCode) {
-        if(supportedRequestCodes == null)
+        if (supportedRequestCodes == null)
             return true;
 
         for (int supportedRequestCode : supportedRequestCodes) {
-            if(supportedRequestCode == requestCode)
+            if (supportedRequestCode == requestCode)
                 return true;
         }
 
@@ -125,12 +129,5 @@ public class PermissionsPresenter implements IPermissionsPresenter {
     private Activity getActivity() {
         return view.getActivity();
     }
-    
-    private final IPermissionRequestDecision permissionRequestDecision = new IPermissionRequestDecision() {
-        @Override
-        public void forcePermissionsRequest(int requestCode, Activity activity, String[] permissions) {
-            runActionUnderPermissions(requestCode, true, permissions);
-        }
-    };
 
 }
