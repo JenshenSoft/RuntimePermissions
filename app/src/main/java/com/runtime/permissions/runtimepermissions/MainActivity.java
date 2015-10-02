@@ -117,7 +117,7 @@ public class MainActivity extends SampleActivityBase
 
     public void showCamera(View view) {
         Log.i(TAG, "Show camera button pressed. Checking permission.");
-        presenter.runActionUnderPermissionsNotForced(REQUEST_CAMERA, Manifest.permission.CAMERA);
+        presenter.runActionUnderPermissions(REQUEST_CAMERA, true, Manifest.permission.CAMERA);
     }
 
     /**

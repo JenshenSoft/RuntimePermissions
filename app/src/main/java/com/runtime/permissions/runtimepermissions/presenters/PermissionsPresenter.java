@@ -5,13 +5,14 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 
-import com.pushtorefresh.storio.sqlite.queries.Query;
 import com.runtime.permissions.runtimepermissions.presenters.db.DbModule;
 import com.runtime.permissions.runtimepermissions.presenters.db.entities.Permission;
 import com.runtime.permissions.runtimepermissions.presenters.db.tables.PermissionTable;
+import com.runtime.permissions.runtimepermissions.presenters.ui.PermissionDialog;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,9 +20,17 @@ import java.util.List;
 
 public class PermissionsPresenter implements IPermissionsPresenter {
 
+    private static final String FRAGMENT_DIALOG = "Fragment Dialog";
     private final IPermissionsView view;
 
     private final int[] supportedRequestCodes;
+    private final PermissionDialog.Callback dialogCallback = new PermissionDialog.Callback() {
+
+        @Override
+        public void permissionsGrantResult(int requestCode, int permissionsGrantResult, List<String> requestedPermissions, List<String> grantedPermissions) {
+            view.permissionsGrantResult(requestCode, permissionsGrantResult, requestedPermissions, grantedPermissions);
+        }
+    };
     private final IPermissionRequestDecision permissionRequestDecision = new IPermissionRequestDecision() {
         @Override
         public void forcePermissionsRequest(int requestCode, Activity activity, String[] permissions) {
@@ -56,9 +65,6 @@ public class PermissionsPresenter implements IPermissionsPresenter {
             requestPermissions(activity, requestCode, permissions);
         }
     }
-
-    
-    /* private methods */
 
     @Override
     public void runActionUnderPermissionsNotForced(int requestCode, @NonNull String... permissions) {
@@ -99,12 +105,11 @@ public class PermissionsPresenter implements IPermissionsPresenter {
         return true;
     }
 
+
+    /* private methods */
+
     private boolean isAppropriateVersionCode() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;// Marshmallow+
-    }
-
-    private void requestPermissions(Activity activity, int requestCode, String... permissions) {
-        ActivityCompat.requestPermissions(activity, permissions, requestCode);
     }
 
     private boolean isRequestCodeSupported(int requestCode) {
@@ -134,13 +139,11 @@ public class PermissionsPresenter implements IPermissionsPresenter {
             return isPermissionsGranted;
         } else {
             DbModule dbModule = new DbModule(getActivity().getApplicationContext());
-            List<Permission> permissionsFromDB = dbModule.getPermissionsByQuery(Query.builder()
-                    .table(PermissionTable.TABLE)
-                    .where(PermissionTable.COLUMN_PERMISSION_NAME + " == ?")
-                    .whereArgs(permissions)
-                    .build());
+            List<Permission> permissionsFromDB =
+                    dbModule.getPermissionsByArguments(PermissionTable.COLUMN_PERMISSION_NAME, permissions);
+            dbModule.reset();
             for (Permission permission : permissionsFromDB) {
-                if (permission.isGranted == 1) {
+                if (permission.isGranted == PermissionTable.TRUE) {
                     return true;
                 }
             }
@@ -156,18 +159,37 @@ public class PermissionsPresenter implements IPermissionsPresenter {
             }
             return isShouldShowRequest;
         } else {
+            isShouldShowRequest = false;
             DbModule dbModule = new DbModule(getActivity().getApplicationContext());
-            List<Permission> permissionsFromDB = dbModule.getPermissionsByQuery(Query.builder()
-                    .table(PermissionTable.TABLE)
-                    .where(PermissionTable.COLUMN_PERMISSION_NAME + " == ?")
-                    .whereArgs(permissions)
-                    .build());
+            List<Permission> permissionsFromDB =
+                    dbModule.getPermissionsByArguments(PermissionTable.COLUMN_PERMISSION_NAME, permissions);
+            dbModule.reset();
             for (Permission permission : permissionsFromDB) {
-                if (permission.isNeedToShowRequest == 1) {
-                    return true;
+                if (permission.isNeedToShowRequest == PermissionTable.TRUE) {
+                    isShouldShowRequest = true;
                 }
             }
-            return false;
+            return !forced && isShouldShowRequest;
+        }
+    }
+
+    private void requestPermissions(Activity activity, int requestCode, String... permissions) {
+        if (isAppropriateVersionCode()) {
+            ActivityCompat.requestPermissions(activity, permissions, requestCode);
+        } else {
+            DbModule dbModule = new DbModule(getActivity().getApplicationContext());
+            List<Permission> permissionsFromDB =
+                    dbModule.getPermissionsByArguments(PermissionTable.COLUMN_PERMISSION_NAME, permissions);
+            dbModule.reset();
+
+            PermissionDialog dialog = new PermissionDialog();
+            Bundle bundle = new Bundle();
+            bundle.putSerializable(PermissionDialog.FRAGMENT_ARG_PERMISSIONS, new ArrayList<>(permissionsFromDB));
+            bundle.putInt(PermissionDialog.FRAGMENT_ARG_REQUEST_CODE, requestCode);
+            dialog.setArguments(bundle);
+            dialog.setCallback(dialogCallback);
+            dialog.setCancelable(false);
+            dialog.show(getActivity().getFragmentManager(), FRAGMENT_DIALOG);
         }
     }
 }

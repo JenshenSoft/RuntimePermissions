@@ -6,11 +6,14 @@ import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteColumn;
 import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteType;
 import com.runtime.permissions.runtimepermissions.presenters.db.tables.PermissionTable;
 
+import java.io.Serializable;
+
 /**
  * Created by Евгений on 27.09.2015
  */
 @StorIOSQLiteType(table = PermissionTable.TABLE)
-public class Permission {
+public class Permission implements Serializable {
+
     @Nullable
     @StorIOSQLiteColumn(name = PermissionTable.COLUMN_ID, key = true)
     public Long id;

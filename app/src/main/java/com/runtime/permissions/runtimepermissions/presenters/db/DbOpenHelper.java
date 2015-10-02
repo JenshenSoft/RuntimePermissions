@@ -10,7 +10,7 @@ import com.runtime.permissions.runtimepermissions.presenters.db.tables.Permissio
 public class DbOpenHelper extends SQLiteOpenHelper {
 
     public DbOpenHelper(@NonNull Context context) {
-        super(context, "deberz_db", null, 1);
+        super(context, "permissions_db", null, 1);
     }
 
     @Override

@@ -48,7 +48,7 @@ public class DbModule {
         sqLiteOpenHelper.close();
     }
 
-    public void addPermissions(Context context) {
+    public void addPermissionsFromManifest(Context context) {
         List<Permission> permissions = getPermissionsByQuery(PermissionTable.QUERY_ALL);
         if (permissions.isEmpty()) {
             permissions = PackageUtil.getAllPermissions(context);
@@ -60,6 +60,22 @@ public class DbModule {
         }
     }
 
+    public void addPermissions(List<Permission> permissions) {
+        storIOSQLite
+                .put()
+                .objects(permissions)
+                .prepare()
+                .executeAsBlocking();
+    }
+
+    public void addPermission(Permission permission) {
+        storIOSQLite
+                .put()
+                .object(permission)
+                .prepare()
+                .executeAsBlocking();
+    }
+
     public List<Permission> getPermissionsByQuery(Query query) {
        return storIOSQLite
                         .get()
@@ -67,6 +83,18 @@ public class DbModule {
                         .withQuery(query)
                         .prepare()
                         .executeAsBlocking();
+    }
+
+    public List<Permission> getPermissionsByArguments(String column, String ...args) {
+        String where = column + " == ?";
+        for (int i = 1; i < args.length; i++) {
+            where += " OR " + column + " == ?";
+        }
+        return getPermissionsByQuery(Query.builder()
+                .table(PermissionTable.TABLE)
+                .where(where)
+                .whereArgs(args)
+                .build());
     }
 
     private SQLiteOpenHelper provideSQLiteOpenHelper(@NonNull Context context) {
