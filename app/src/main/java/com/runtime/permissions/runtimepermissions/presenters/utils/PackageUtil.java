@@ -4,36 +4,29 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.PermissionGroupInfo;
 import android.content.pm.PermissionInfo;
-import android.util.Log;
 
+import com.runtime.permissions.runtimepermissions.presenters.db.entities.Permission;
+
+import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by user on 01.10.15.
- */
 public class PackageUtil {
 
-    public static List<String> getAllPermissions(Context context) {
+    public static List<Permission> getAllPermissions(Context context) {
+        List<Permission> permissions = new ArrayList<>();
         PackageManager pm = context.getPackageManager();
-        CharSequence csPermissionGroupLabel;
-        CharSequence csPermissionLabel;
 
         List<PermissionGroupInfo> lstGroups = pm.getAllPermissionGroups(0);
         for (PermissionGroupInfo pgi : lstGroups) {
-            csPermissionGroupLabel = pgi.loadLabel(pm);
-            Log.e("perm", pgi.name + ": " + csPermissionGroupLabel.toString());
-
             try {
                 List<PermissionInfo> lstPermissions = pm.queryPermissionsByGroup(pgi.name, 0);
                 for (PermissionInfo pi : lstPermissions) {
-                    csPermissionLabel = pi.loadLabel(pm);
-                    Log.e("perm", "   " + pi.name + ": " + csPermissionLabel.toString());
+                    permissions.add(Permission.newPermission(pi.name, 0, 1));
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
-    return null;
+        return permissions;
     }
-
 }

@@ -237,8 +237,6 @@ public class MainActivity extends SampleActivityBase
             transaction.replace(R.id.sample_content_fragment, fragment);
             transaction.commit();
         }
-
-        PackageUtil.getAllPermissions(this);
         // This method sets up our custom logger, which will print all log messages to the device
         // screen, as well as to adb logcat.
         initializeLogging();

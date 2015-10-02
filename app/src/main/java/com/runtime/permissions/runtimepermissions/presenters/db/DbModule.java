@@ -8,10 +8,15 @@ import android.support.annotation.NonNull;
 import com.pushtorefresh.storio.sqlite.SQLiteTypeMapping;
 import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 import com.pushtorefresh.storio.sqlite.impl.DefaultStorIOSQLite;
+import com.pushtorefresh.storio.sqlite.queries.Query;
 import com.runtime.permissions.runtimepermissions.presenters.db.entities.Permission;
 import com.runtime.permissions.runtimepermissions.presenters.db.entities.PermissionStorIOSQLiteDeleteResolver;
 import com.runtime.permissions.runtimepermissions.presenters.db.entities.PermissionStorIOSQLiteGetResolver;
 import com.runtime.permissions.runtimepermissions.presenters.db.entities.PermissionStorIOSQLitePutResolver;
+import com.runtime.permissions.runtimepermissions.presenters.db.tables.PermissionTable;
+import com.runtime.permissions.runtimepermissions.presenters.utils.PackageUtil;
+
+import java.util.List;
 
 
 public class DbModule {
@@ -41,6 +46,27 @@ public class DbModule {
 
     public void reset() {
         sqLiteOpenHelper.close();
+    }
+
+    public void addPermissions(Context context) {
+        List<Permission> permissions = getPermissionsByQuery(PermissionTable.QUERY_ALL);
+        if (permissions.isEmpty()) {
+            permissions = PackageUtil.getAllPermissions(context);
+            storIOSQLite
+                    .put()
+                    .objects(permissions)
+                    .prepare()
+                    .executeAsBlocking();
+        }
+    }
+
+    public List<Permission> getPermissionsByQuery(Query query) {
+       return storIOSQLite
+                        .get()
+                        .listOfObjects(Permission.class)
+                        .withQuery(query)
+                        .prepare()
+                        .executeAsBlocking();
     }
 
     private SQLiteOpenHelper provideSQLiteOpenHelper(@NonNull Context context) {
