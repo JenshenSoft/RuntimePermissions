@@ -27,8 +27,8 @@ public class PermissionsPresenter implements IPermissionsPresenter {
     private final PermissionDialog.Callback dialogCallback = new PermissionDialog.Callback() {
 
         @Override
-        public void permissionsGrantResult(int requestCode, int permissionsGrantResult, List<String> requestedPermissions, List<String> grantedPermissions) {
-            view.permissionsGrantResult(requestCode, permissionsGrantResult, requestedPermissions, grantedPermissions);
+        public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+            PermissionsPresenter.this.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     };
     private final IPermissionRequestDecision permissionRequestDecision = new IPermissionRequestDecision() {
@@ -143,7 +143,7 @@ public class PermissionsPresenter implements IPermissionsPresenter {
                     dbModule.getPermissionsByArguments(PermissionTable.COLUMN_PERMISSION_NAME, permissions);
             dbModule.reset();
             for (Permission permission : permissionsFromDB) {
-                if (permission.isGranted == PermissionTable.TRUE) {
+                if (permission.isGranted == PermissionTable.PERMISSION_GRANTED) {
                     return true;
                 }
             }
@@ -165,7 +165,7 @@ public class PermissionsPresenter implements IPermissionsPresenter {
                     dbModule.getPermissionsByArguments(PermissionTable.COLUMN_PERMISSION_NAME, permissions);
             dbModule.reset();
             for (Permission permission : permissionsFromDB) {
-                if (permission.isNeedToShowRequest == PermissionTable.TRUE) {
+                if (permission.isNeedToShowRequest == PermissionTable.PERMISSION_SHOULD_SHOW_REQUEST) {
                     isShouldShowRequest = true;
                 }
             }
@@ -181,7 +181,6 @@ public class PermissionsPresenter implements IPermissionsPresenter {
             List<Permission> permissionsFromDB =
                     dbModule.getPermissionsByArguments(PermissionTable.COLUMN_PERMISSION_NAME, permissions);
             dbModule.reset();
-
             PermissionDialog dialog = new PermissionDialog();
             Bundle bundle = new Bundle();
             bundle.putSerializable(PermissionDialog.FRAGMENT_ARG_PERMISSIONS, new ArrayList<>(permissionsFromDB));

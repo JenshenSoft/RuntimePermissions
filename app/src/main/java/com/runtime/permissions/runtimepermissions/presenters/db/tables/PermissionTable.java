@@ -7,8 +7,11 @@ import com.pushtorefresh.storio.sqlite.queries.Query;
 
 public class PermissionTable {
 
-    public static final int TRUE = 1;
-    public static final int FALSE = 0;
+    public static final int PERMISSION_GRANTED = 0;
+    public static final int PERMISSION_DENIED = -1;
+
+    public static final int PERMISSION_SHOULD_SHOW_REQUEST = 345;
+    public static final int PERMISSION_NOT_SHOULD_SHOW_REQUEST = 234;
 
     @NonNull
     public static final String TABLE = "tables";
@@ -39,8 +42,8 @@ public class PermissionTable {
         return "CREATE TABLE " + TABLE + "("
                 + COLUMN_ID + " INTEGER NOT NULL PRIMARY KEY, "
                 + COLUMN_PERMISSION_NAME + " INTEGER NOT NULL, "
-                + COLUMN_IS_GRANTED + " INTEGER DEFAULT " + FALSE + ", "
-                + COLUMN_IS_NEED_TO_SHOW_REQUEST + " INTEGER DEFAULT " + FALSE
+                + COLUMN_IS_GRANTED + " INTEGER DEFAULT " + PERMISSION_DENIED + ", "
+                + COLUMN_IS_NEED_TO_SHOW_REQUEST + " INTEGER DEFAULT " + PERMISSION_SHOULD_SHOW_REQUEST
                 + ");";
     }
 }

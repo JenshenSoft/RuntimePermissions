@@ -13,14 +13,12 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 
 import com.runtime.permissions.R;
-import com.runtime.permissions.runtimepermissions.presenters.IPermissionsView;
 import com.runtime.permissions.runtimepermissions.presenters.db.DbModule;
 import com.runtime.permissions.runtimepermissions.presenters.db.entities.Permission;
 import com.runtime.permissions.runtimepermissions.presenters.db.tables.PermissionTable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.ListIterator;
 
 
 public class PermissionDialog extends DialogFragment implements View.OnClickListener {
@@ -34,20 +32,18 @@ public class PermissionDialog extends DialogFragment implements View.OnClickList
     private Button allow_button;
     private Callback callback;
     private ArrayList<Permission> permissions;
-    private List<String> requestedPermissions = new ArrayList<>();
-    private List<String> grantedPermissions = new ArrayList<>();
     private Permission currentPermission;
     private int requestCode;
     private DbModule dbModule;
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_dialog_permission, container);
         permissions = (ArrayList<Permission>) getArguments().getSerializable(FRAGMENT_ARG_PERMISSIONS);
         requestCode = getArguments().getInt(FRAGMENT_ARG_REQUEST_CODE);
-        for (Permission permission : permissions) {
-            requestedPermissions.add(permission.permission);
-        }
+
         message_textView = (TextView) view.findViewById(R.id.message_textView);
         deny_button = (Button) view.findViewById(R.id.deny_button);
         allow_button = (Button) view.findViewById(R.id.allow_button);
@@ -55,6 +51,7 @@ public class PermissionDialog extends DialogFragment implements View.OnClickList
         checkBox.setOnClickListener(this);
         deny_button.setOnClickListener(this);
         allow_button.setOnClickListener(this);
+
         dbModule = new DbModule(getActivity().getApplicationContext());
         getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         onNextPermissions();
@@ -65,18 +62,17 @@ public class PermissionDialog extends DialogFragment implements View.OnClickList
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.allow_button:
-                grantedPermissions.add(currentPermission.permission);
-                currentPermission.isGranted = PermissionTable.TRUE;
+                currentPermission.isGranted = PermissionTable.PERMISSION_GRANTED;
                 break;
             case R.id.deny_button:
-                currentPermission.isGranted = PermissionTable.FALSE;
+                currentPermission.isGranted = PermissionTable.PERMISSION_DENIED;
                 break;
             case R.id.checkBox:
                 if (checkBox.isChecked()) {
-                    currentPermission.isNeedToShowRequest = PermissionTable.FALSE;
+                    currentPermission.isNeedToShowRequest = PermissionTable.PERMISSION_NOT_SHOULD_SHOW_REQUEST;
                     allow_button.setEnabled(false);
                 } else {
-                    currentPermission.isNeedToShowRequest = PermissionTable.TRUE;
+                    currentPermission.isNeedToShowRequest = PermissionTable.PERMISSION_SHOULD_SHOW_REQUEST;
                     allow_button.setEnabled(true);
                 }
                 dbModule.addPermission(currentPermission);
@@ -95,34 +91,51 @@ public class PermissionDialog extends DialogFragment implements View.OnClickList
         this.callback = callback;
     }
 
-    public interface Callback {
-        void permissionsGrantResult(int requestCode, int permissionsGrantResult, List<String> requestedPermissions, java.util.List<String> grantedPermissions);
+    private void onNextPermissions() {
+        if (!setNextItem()) {
+            dbModule.addPermission(currentPermission);
+            setResult();
+            return;
+        }
+        message_textView.setText(currentPermission.permission);
     }
 
 
     /* private methods */
 
-    private void onNextPermissions() {
-        if (permissions.isEmpty()) {
-            dbModule.addPermission(currentPermission);
-            setResult();
-            return;
+    private void setResult() {
+        int size = permissions.size();
+        String[] permissionsResult = new String[size];
+        int[] permissionsGranted = new int[size];
+        for (int i = 0; i < size; i++) {
+            permissionsResult[i] = permissions.get(i).permission;
+            permissionsGranted[i] = permissions.get(i).isGranted;
         }
-        currentPermission = permissions.get(0);
-        permissions.remove(0);
-        message_textView.setText(currentPermission.permission);
+        callback.onRequestPermissionsResult(requestCode, permissionsResult, permissionsGranted);
+        dismiss();
     }
 
-    private void setResult() {
-        int permissionsGrantResult;
-        if (requestedPermissions.size() == grantedPermissions.size()) {
-            permissionsGrantResult = IPermissionsView.PERMISSIONS_GRANT_RESULT_ALLOW_ALL;
-        } else if (grantedPermissions.isEmpty()) {
-            permissionsGrantResult = IPermissionsView.PERMISSIONS_GRANT_RESULT_DENY_ALL;
-        } else {
-            permissionsGrantResult = IPermissionsView.PERMISSIONS_GRANT_RESULT_ALLOW_PARTIALLY;
+    public boolean setNextItem() {
+        if (currentPermission == null) {
+            currentPermission = permissions.get(0);
+            return true;
         }
-        callback.permissionsGrantResult(requestCode, permissionsGrantResult, requestedPermissions, grantedPermissions);
-        dismiss();
+        ListIterator<Permission> listIterator = permissions.listIterator();
+        while (listIterator.hasNext()) {
+            Permission item = listIterator.next();
+            if (item.equals(currentPermission)) {
+                if (listIterator.hasNext()) {
+                    currentPermission = listIterator.next();
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+
+    public interface Callback {
+        void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults);
     }
 }

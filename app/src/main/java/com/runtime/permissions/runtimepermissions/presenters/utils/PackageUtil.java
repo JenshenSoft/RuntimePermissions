@@ -6,6 +6,7 @@ import android.content.pm.PermissionGroupInfo;
 import android.content.pm.PermissionInfo;
 
 import com.runtime.permissions.runtimepermissions.presenters.db.entities.Permission;
+import com.runtime.permissions.runtimepermissions.presenters.db.tables.PermissionTable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +22,7 @@ public class PackageUtil {
             try {
                 List<PermissionInfo> lstPermissions = pm.queryPermissionsByGroup(pgi.name, 0);
                 for (PermissionInfo pi : lstPermissions) {
-                    permissions.add(Permission.newPermission(pi.name, 0, 1));
+                    permissions.add(Permission.newPermission(pi.name, PermissionTable.PERMISSION_DENIED, PermissionTable.PERMISSION_SHOULD_SHOW_REQUEST));
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
