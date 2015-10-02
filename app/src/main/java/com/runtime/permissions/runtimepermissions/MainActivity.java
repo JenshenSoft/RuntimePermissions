@@ -114,7 +114,7 @@ public class MainActivity extends SampleActivityBase
      */
     private final IPermissionsPresenter presenter;
     public MainActivity() {
-        presenter = new PermissionsPresenter(this);
+        presenter = new PermissionsPresenter(MainActivity.this , this);
     }
     public void showCamera(View view) {
         Log.i(TAG, "Show camera button pressed. Checking permission.");
@@ -127,7 +127,7 @@ public class MainActivity extends SampleActivityBase
      */
     public void showContacts(View v) {
         Log.i(TAG, "Show contacts button pressed. Checking permissions.");
-        presenter.runActionUnderPermissionsNotForced(REQUEST_CONTACTS,
+        presenter.runActionUnderPermissions(REQUEST_CONTACTS, false,
                 Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS);
     }
 
@@ -242,7 +242,9 @@ public class MainActivity extends SampleActivityBase
         return super.onOptionsItemSelected(item);
     }
 
-    /** Create a chain of targets that will receive log data */
+    /**
+     * Create a chain of targets that will receive log data
+     */
     @Override
     public void initializeLogging() {
         // Wraps Android's native log framework.
@@ -284,11 +286,17 @@ public class MainActivity extends SampleActivityBase
 
     @Override
     public void permissionsGrantResult(int requestCode, int permissionsGrantResult, List<String> requestedPermissions, List<String> grantedPermissions) {
-
+        /*switch (permissionsGrantResult) {
+            case IPermissionsView.PERMISSIONS_ARE_ALREADY_GRANTED:
+                onPermissionsAlreadyGranted(requestCode);
+                break;
+            default:
+                showMessageAboutGrantedPermissions(requestCode, permissionsGrantResult);
+        }*/
     }
 
     @Override
-    public void decideShouldRequestPermissions(final int requestCode,final String[] permissions,final IPermissionRequestDecision decision) {
+    public void decideShouldRequestPermissions(final int requestCode, final String[] permissions, final IPermissionRequestDecision decision) {
         int messageId;
         switch (requestCode) {
             case REQUEST_CAMERA:
@@ -309,14 +317,7 @@ public class MainActivity extends SampleActivityBase
                 .show();
     }
 
-    @Override
-    public Activity getActivity() {
-        return this;
-    }
-
-    /*
-    @Override
-    public void onPermissionsForAction(int requestCode, List<String> permissions) {
+    public void onPermissionsAlreadyGranted(int requestCode) {
         switch (requestCode) {
             case REQUEST_CAMERA:
                 showCameraPreview();
@@ -326,5 +327,46 @@ public class MainActivity extends SampleActivityBase
                 break;
         }
     }
-    */
+
+    public void showMessageAboutGrantedPermissions(int requestCode, int permissionsGrantResult) {
+        int resId;
+        switch (requestCode) {
+
+            case REQUEST_CAMERA:
+                Log.i(TAG, "Received response for Camera permission request.");
+                // Check if the only required permission has been granted
+                switch (permissionsGrantResult) {
+                    case IPermissionsView.PERMISSIONS_GRANT_RESULT_ALLOW_ALL:
+                        Log.i(TAG, "CAMERA permission has now been granted. Showing preview.");
+                        resId = R.string.permision_available_camera;
+                        break;
+                    default:
+                        Log.i(TAG, "CAMERA permission was NOT granted.");
+                        resId = R.string.permissions_not_granted;
+                }
+                showMessage(resId, Snackbar.LENGTH_LONG);
+                break;
+            case REQUEST_CONTACTS:
+                Log.i(TAG, "Received response for contact permissions request.");
+                // We have requested multiple permissions for contacts, so all of them need to be
+                // checked.
+                Log.i(TAG, "Received response for Camera permission request.");
+                // Check if the only required permission has been granted
+                switch (permissionsGrantResult) {
+                    case IPermissionsView.PERMISSIONS_GRANT_RESULT_ALLOW_ALL:
+                        Log.i(TAG, "Contacts permissions has now been granted. Showing preview.");
+                        resId = R.string.permision_available_contacts;
+                        break;
+                    default:
+                        Log.i(TAG, "Contacts permissions were NOT granted.");
+                        resId = R.string.permissions_not_granted;
+                }
+                showMessage(resId, Snackbar.LENGTH_LONG);
+        }
+    }
+
+    private void showMessage(int messageResId, int length) {
+        Snackbar.make(mLayout, messageResId, length)
+                .show();
+    }
 }

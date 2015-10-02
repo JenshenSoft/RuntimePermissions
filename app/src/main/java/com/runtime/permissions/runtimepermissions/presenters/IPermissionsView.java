@@ -14,5 +14,8 @@ public interface IPermissionsView {
 
     void decideShouldRequestPermissions(int requestCode, String[] permissions, IPermissionRequestDecision decision);
 
-    Activity getActivity();
+    interface IPermissionRequestDecision {
+        void forcePermissionsRequest(int requestCode, Activity activity, String[] permissions);
+    }
+
 }
