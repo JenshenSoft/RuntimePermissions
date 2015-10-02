@@ -16,7 +16,15 @@ import com.runtime.permissions.runtimepermissions.presenters.db.entities.Permiss
 
 public class DbModule {
 
-    public StorIOSQLite provideStorIOSQLite(@NonNull SQLiteOpenHelper sqLiteOpenHelper) {
+    public final SQLiteOpenHelper sqLiteOpenHelper;
+    public final StorIOSQLite storIOSQLite;
+
+    public DbModule(@NonNull Context context) {
+        sqLiteOpenHelper = provideSQLiteOpenHelper(context);
+        storIOSQLite = provideStorIOSQLite();
+    }
+
+    private StorIOSQLite provideStorIOSQLite() {
         return DefaultStorIOSQLite.builder()
                 .sqliteOpenHelper(sqLiteOpenHelper)
                 .addTypeMapping(Permission.class, SQLiteTypeMapping.<Permission>builder()
@@ -27,7 +35,15 @@ public class DbModule {
                 .build();
     }
 
-    public SQLiteOpenHelper provideSQLiteOpenHelper(@NonNull Context context) {
+    public StorIOSQLite getStorIOSQLite() {
+        return storIOSQLite;
+    }
+
+    public void reset() {
+        sqLiteOpenHelper.close();
+    }
+
+    private SQLiteOpenHelper provideSQLiteOpenHelper(@NonNull Context context) {
         return new DbOpenHelper(context);
     }
 }
